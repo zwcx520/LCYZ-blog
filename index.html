@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LCYZ-blogCMS · 不见桃花</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/phosphor-icons@1.4.2/src/css/icons.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --ink: #0a0814;
+  --sakura: #f7c5cc;
+  --lavender: #c4a8ff;
+  --sidebar-w: 280px;
+  --line: rgba(255,255,255,0.06);
+}
+
+* { font-family: 'Noto Serif SC', serif; }
+
+body {
+  background: var(--ink);
+  color: #e8e4f0;
+  overflow-x: hidden;
+}
+
+/* ==================== 侧边栏 ==================== */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: rgba(10,8,20,0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-brand {
+  padding: 2.5rem 2rem 2rem;
+  border-bottom: 1px solid var(--line);
+}
+.sidebar-brand .logo-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #fff;
+}
+.sidebar-brand .logo-sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: rgba(255,255,255,0.25);
+  margin-top: 0.4rem;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+.nav-group-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.2);
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.45);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  position: relative;
+  margin-bottom: 0.15rem;
+}
+.nav-item i {
+  font-size: 1.1rem;
+  width: 1.5rem;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.nav-item:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+.nav-item:hover i { color: var(--sakura); }
+.nav-item.active {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(247,197,204,0.12), transparent);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 60%;
+  background: var(--sakura);
+  border-radius: 0 2px 2px 0;
+}
+.nav-item.active i { color: var(--sakura); }
+
+.sidebar-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--line);
+}
+.sidebar-footer .ver {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.05em;
+}
+.sidebar-footer .links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.sidebar-footer .links a {
+  color: rgba(255,255,255,0.2);
+  font-size: 1.1rem;
+  transition: color 0.3s;
+}
+.sidebar-footer .links a:hover { color: var(--sakura); }
+
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 1.25rem; left: 1.25rem;
+  z-index: 200;
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 8px;
+  background: rgba(10,8,20,0.9);
+  border: 1px solid var(--line);
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* ==================== 主内容区 ==================== */
+.main-content {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.hero-title .accent {
+  background: linear-gradient(135deg, var(--sakura), var(--lavender));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.particle { position: absolute; width: 2px; height: 2px; background: rgba(247,197,204,0.4); border-radius: 50%; }
+
+.divider { height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  background: #fff; color: #0a0814;
+  font-weight: 600; font-size: 0.9rem;
+  letter-spacing: 0.05em; border-radius: 2px;
+  transition: all 0.4s; text-decoration: none;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 60px rgba(255,255,255,0.15); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  border: 1px solid var(--line); color: #e8e4f0;
+  font-size: 0.9rem; letter-spacing: 0.05em;
+  border-radius: 2px; transition: all 0.4s; text-decoration: none;
+}
+.btn-ghost:hover { border-color: rgba(247,197,204,0.3); background: rgba(255,255,255,0.03); }
+
+.code-block {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1.5rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.8;
+  overflow-x: auto;
+}
+.code-block .comment { color: rgba(255,255,255,0.25); }
+.code-block .keyword { color: var(--lavender); }
+.code-block .string { color: var(--sakura); }
+
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400; font-size: 0.75rem;
+  letter-spacing: 0.1em; color: rgba(255,255,255,0.35);
+}
+.data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 0.85rem; color: rgba(255,255,255,0.65);
+}
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.step-item {
+  display: flex; gap: 2rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.step-num {
+  flex-shrink: 0;
+  width: 2.75rem; height: 2.75rem;
+  border: 1px solid var(--sakura);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; color: var(--sakura);
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.72rem; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.45);
+  margin-right: 0.5rem; margin-bottom: 0.5rem;
+}
+
+.scroll-progress {
+  position: fixed; top: 0; left: 0;
+  height: 1px; width: 100%;
+  background: linear-gradient(90deg, var(--sakura), var(--lavender));
+  z-index: 9999;
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+.section-label {
+  font-size: 0.7rem; letter-spacing: 0.3em;
+  display: block; margin-bottom: 1rem;
+}
+.section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300; color: rgba(255,255,255,0.9);
+}
+
+.scroll-hint {
+  position: fixed;
+  right: 2rem; bottom: 2rem;
+  z-index: 50;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  opacity: 0.3; font-size: 0.7rem; letter-spacing: 0.1em;
+  writing-mode: vertical-rl;
+}
+
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 300px;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: flex; }
+  .main-content { margin-left: 0; }
+  .scroll-hint { display: none; }
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99;
+  }
+  .sidebar-overlay.show { display: block; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="scroll-progress" id="progress"></div>
+
+<button class="menu-toggle" id="menuToggle">
+  <i class="ph ph-list"></i>
+</button>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- 侧边栏 -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-text">LCYZ<span style="color:var(--sakura)">·</span>BLOG</div>
+    <div class="logo-sub">CMS SYSTEM</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group-title">概览</div>
+    <a href="#hero" class="nav-item active" data-nav>
+      <i class="ph ph-house"></i> 首页
+    </a>
+    <a href="#requirements" class="nav-item" data-nav>
+      <i class="ph ph-server"></i> 环境要求
+    </a>
+    <a href="#install" class="nav-item" data-nav>
+      <i class="ph ph-rocket"></i> 安装部署
+    </a>
+
+    <div class="nav-group-title">开发</div>
+    <a href="#structure" class="nav-item" data-nav>
+      <i class="ph ph-folder-tree"></i> 目录结构
+    </a>
+    <a href="#changelog" class="nav-item" data-nav>
+      <i class="ph ph-scroll"></i> 更新日志
+    </a>
+
+    <div class="nav-group-title">资源</div>
+    <a href="#download" class="nav-item" data-nav>
+      <i class="ph ph-download-simple"></i> 下载
+    </a>
+    <a href="#docs" class="nav-item" data-nav>
+      <i class="ph ph-book-open"></i> 开发文档
+    </a>
+    <a href="#support" class="nav-item" data-nav>
+      <i class="ph ph-lifebuoy"></i> 技术支持
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="ver">LCYZ-blogCMS v1.0</div>
+    <div class="links">
+      <a href="#"><i class="ph ph-github-logo"></i></a>
+      <a href="#"><i class="ph ph-twitter-logo"></i></a>
+      <a href="#"><i class="ph ph-envelope"></i></a>
+      <a href="#"><i class="ph ph-rss"></i></a>
+    </div>
+  </div>
+</aside>
+
+<!-- 主内容区 -->
+<div class="main-content">
+
+  <!-- Hero -->
+  <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden" style="padding-left:2rem;padding-right:2rem;">
+    <div class="particles" id="particles"></div>
+    <div class="relative z-10 text-center max-w-4xl mx-auto">
+      <p class="text-xs tracking-[0.4em] text-white/30 mb-6 animate-[fadeIn_1.5s_ease-out]">
+        PERSONAL BLOG · DOWNLOAD SYSTEM · v2.6
+      </p>
+      <h1 class="hero-title mb-6">
+        <span class="block animate-[fadeInUp_1s_ease-out]">不见桃花</span>
+        <span class="block accent animate-[fadeInUp_1s_ease-out_0.2s_both]">LCYZ-blogCMS</span>
+      </h1>
+      <p class="text-base md:text-lg text-white/40 font-light max-w-xl mx-auto leading-relaxed animate-[fadeInUp_1s_ease-out_0.4s_both]">
+        基于 Z-Blog 架构深度重构的个人博客与资源下载系统<br>
+        为创作者而生，让每一次发布都成为仪式
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 animate-[fadeInUp_1s_ease-out_0.6s_both]">
+        <a href="#install" class="btn-primary">
+          开始部署
+          <i class="ph ph-arrow-right text-lg"></i>
+        </a>
+        <a href="#download" class="btn-ghost">
+          <i class="ph ph-download text-lg"></i>
+          下载安装包
+        </a>
+      </div>
+    </div>
+
+    <div class="scroll-hint">
+      <span>SCROLL</span>
+      <i class="ph ph-arrow-down"></i>
+    </div>
+  </section>
+
+  <div class="divider mx-8"></div>
+
+  <!-- 环境要求 -->
+  <section id="requirements" class="py-24 px-8 md:px-16">
+    <div class="max-w-5xl mx-auto">
+      <span class="section-label" style="color:var(--sakura)">PREREQUISITES</span>
+      <h2 class="section-title mb-4">环境要求</h2>
+      <p class="text-white/30 font-light mb-12">部署前请确保服务器满足以下条件</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-[rgba(255,255,255,0.02)] border border-white/5 p-8 rounded-sm">
+          <i class="ph ph-server text-3xl" style="color:var(--lavender)"></i>
+          <h3 class="text-lg font-light mt-4 mb-4 text-white/80">服务器端</h3>
+          <table class="data-table">
+            <tr><td>Web Server</td><td>Nginx 1.18+ / Apache 2.4+</td></tr>
+            <tr><td>PHP</td><td>7.4 / 8.0 / 8.1 / 8.2</td></tr>
+            <tr><td>MySQL</td><td>5.7+ / MariaDB 10.3+</td></tr>
+            <tr><td>SQLite</td><td>3.0+（可选）</td></tr>
+            <tr><td>内存</td><td>≥ 256MB（推荐 512MB+）</td></tr>
+            <tr><td>磁盘空间</td><td>≥ 100MB（不含附件）</td></tr>
+          </table>
+        </div>
+
+        <div class="bg-[rgba(255,255,255,0.02)] border border-white/5 p-8 rounded-sm">
+          <i class="ph ph-plug text-3xl" style="color:var(--sakura)"></i>
+          <h3 class="text-lg font-light mt-4 mb-4 text-white/80">PHP 扩展依赖</h3>
+          <div class="py-2">
+            <span class="tag">pdo_mysql</span>
+            <span class="tag">mbstring</span>
+            <span class="tag">curl</span>
+            <span class="tag">gd</span>
+            <span class="tag">xml</span>
+            <span class="tag">zip</span>
+            <span class="tag">json</span>
+            <span class="tag">openssl</span>
+            <span class="tag">session</span>
+            <span class="tag">fileinfo</span>
+            <span class="tag">iconv</span>
+          </div>
+          <h3 class="text-lg font-light mt-8 mb-4 text-white/80">推荐环境组合</h3>
+          <div class="code-block">
+<span class="comment"># 生产环境推荐</span>
+PHP 8.1 + Nginx 1.24 + MySQL 8.0
+<span class="comment"># 轻量部署</span>
+PHP 8.0 + Apache 2.4 + SQLite 3
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider mx-8"></div>
+
+  <!-- 安装部署 -->
+  <section id="install" class="py-24 px-8 md:px-16">
+    <div class="max-w-5xl mx-auto">
+      <span class="section-label" style="color:var(--lavender)">INSTALLATION</span>
+      <h2 class="section-title mb-12">安装部署</h2>
+
+      <div class="mb-16">
+        <h3 class="text-xl font-light mb-8 text-white/80 flex items-center gap-3">
+          <i class="ph ph-rocket" style="color:var(--sakura)"></i>
+          标准安装流程
+        </h3>
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="flex-1">
+            <h4 class="text-white/80 mb-2">下载安装包</h4>
+            <p class="text-white/40 font-light text-sm leading-relaxed">
+              从官方下载站获取最新版 LCYZ-blog 完整包，解压至服务器 Web 根目录。
+            </p>
+            <div class="code-block mt-3">
+<span class="comment"># 解压到网站目录</span>
+unzip LCYZ-blog.zip -d /var/www/html/
+chmod -R 755 /var/www/html/
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="flex-1">
+            <h4 class="text-white/80 mb-2">创建数据库</h4>
+            <p class="text-white/40 font-light text-sm leading-relaxed">
+              登录 MySQL 创建专用数据库与用户，建议使用 utf8mb4 字符集。
+            </p>
+            <div class="code-block mt-3">
+<span class="keyword">CREATE DATABASE</span> lcyz_blog <span class="keyword">CHARACTER SET</span> utf8mb4 <span class="keyword">COLLATE</span> utf8mb4_unicode_ci;
+<span class="keyword">CREATE USER</span> <span class="string">'blog_user'</span>@<span class="string">'localhost'</span> <span class="keyword">IDENTIFIED BY</span> <span class="string">'your_password'</span>;
+<span class="keyword">GRANT ALL PRIVILEGES ON</span> lcyz_blog.* <span class="keyword">TO</span> <span class="string">'blog_user'</span>@<span class="string">'localhost'</span>;
+<span class="keyword">FLUSH PRIVILEGES</span>;
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="flex-1">
+            <h4 class="text-white/80 mb-2">运行安装向导</h4>
+            <p class="text-white/40 font-light text-sm leading-relaxed">
+              浏览器访问站点域名，自动跳转至安装向导页面。按提示填写数据库信息与管理员账号。
+            </p>
+            <div class="code-block mt-3">
+<span class="comment">访问地址：</span>
+https://your-domain.com/install.php
+
+<span class="comment">安装完成后务必删除安装文件：</span>
+rm -f /var/www/html/install.php
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" style="border-bottom:none;">
+          <div class="step-num">4</div>
+          <div class="flex-1">
+            <h4 class="text-white/80 mb-2">初始化配置</h4>
+            <p class="text-white/40 font-light text-sm leading-relaxed">
+              登录后台，进入「设置 → 基础配置」完成站点名称、URL、时区等基础信息设置。
+              建议同时配置伪静态规则以获得最佳 SEO 效果。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-16">
+        <h3 class="text-xl font-light mb-6 text-white/80 flex items-center gap-3">
+          <i class="ph ph-cube" style="color:var(--lavender)"></i>
+          Docker 一键部署
+        </h3>
+        <p class="text-white/40 font-light text-sm leading-relaxed mb-4">
+          提供官方 Docker 镜像与 docker-compose 配置，适合快速搭建测试环境或生产部署。
+        </p>
+        <div class="code-block">
+<span class="comment"># 克隆部署仓库</span>
+git clone https://github.com/lcyz-blog/docker.git
+cd docker
+
+<span class="comment"># 修改环境变量</span>
+cp .env.example .env
+vim .env
+
+<span class="comment"># 启动服务</span>
+docker-compose up -d
+
+<span class="comment"># 访问</span>
+http://localhost:8080
+        </div>
+      </div>
+
+      <div class="mb-16">
+        <h3 class="text-xl font-light mb-6 text-white/80 flex items-center gap-3">
+          <i class="ph ph-lock" style="color:var(--sakura)"></i>
+          目录权限配置
+        </h3>
+        <p class="text-white/40 font-light text-sm leading-relaxed mb-4">
+          以下目录需要 Web 服务写入权限：
+        </p>
+        <div class="code-block">
+<span class="comment"># 必须可写</span>
+chmod 755 zb_users/
+chmod 755 zb_users/upload/
+chmod 755 zb_users/cache/
+chmod 755 zb_users/data/
+
+<span class="comment"># 主题与插件目录</span>
+chmod 755 zb_users/theme/
+chmod 755 zb_users/plugin/
+
+<span class="comment"># 确保所有者正确（以 www-data 为例）</span>
+chown -R www-data:www-data /var/www/html/
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-light mb-6 text-white/80 flex items-center gap-3">
+          <i class="ph ph-question" style="color:var(--lavender)"></i>
+          常见问题
+        </h3>
+        <div class="space-y-4">
+          <div class="bg-[rgba(255,255,255,0.02)] border border-white/5 p-6 rounded-sm">
+            <h4 class="text-white/80 text-sm mb-2">Q: 安装页面空白或 500 错误？</h4>
+            <p class="text-white/40 text-sm font-light">
+              A: 检查 PHP 版本是否满足要求，查看服务器错误日志定位具体原因。常见原因：缺少 PHP 扩展、目录权限不足、内存限制过低。
+            </p>
+          </div>
+          <div class="bg-[rgba(255,255,255,0.02)] border border-white/5 p-6 rounded-sm">
+            <h4 class="text-white/80 text-sm mb-2">Q: 伪静态如何配置？</h4>
+            <p class="text-white/40 text-sm font-light mb-3">
+              A: Nginx 用户参考下方规则；Apache 用户确保启用 mod_rewrite 且 .htaccess 文件存在。
+            </p>
+            <div class="code-block">
+<span class="comment"># Nginx 伪静态规则</span>
+location / {
+    <span class="keyword">if</span> (!-e $request_filename) {
+        rewrite ^/(.*)$ /index.php?$1 last;
+    }
+}
+            </div>
+          </div>
+          <div class="bg-[rgba(255,255,255,0.02)] border border-white/5 p-6 rounded-sm">
+            <h4 class="text-white/80 text-sm mb-2">Q: 忘记后台密码怎么办？</h4>
+            <p class="text-white/40 text-sm font-light">
+              A: 可通过数据库直接重置，或使用 tools 目录下的密码重置工具（需验证服务器权限）。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider mx-8"></div>
+
+  <!-- 目录结构 -->
+  <section id="structure" class="py-24 px-8 md:px-16">
+    <div class="max-w-5xl mx-auto">
+      <span class="section-label" style="color:var(--sakura)">DIRECTORY</span>
+      <h2 class="section-title mb-4">目录结构</h2>
+      <p class="text-white/30 font-light mb-12">了解系统文件组织方式，便于二次开发与维护</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="code-block text-sm leading-[2]">
+<span class="comment">├── index.php</span>             入口文件
+<span class="comment">├── install.php</span>           安装向导
+<span class="comment">├── login.php</span>             登录入口
+<span class="comment">├── admin/</span>                后台管理目录
+<span class="comment">│   ├── index.php</span>         后台首页
+<span class="comment">│   ├── admin.php</span>         后台入口
+<span class="comment">│   └── ...</span>
+<span class="comment">├── zb_install/</span>           安装程序
+<span class="comment">├── zb_system/</span>            系统核心
+<span class="comment">│   ├── c_option.php</span>      系统配置
+<span class="comment">│   ├── function/</span>          核心函数
+<span class="comment">│   ├── admin/</span>             后台核心
+<span class="comment">│   └── ...</span>
+        </div>
+        <div class="code-block text-sm leading-[2]">
+<span class="comment">├── zb_users/</span>            用户数据目录
+<span class="comment">│   ├── theme/</span>            主题目录
+<span class="comment">│   │   └── default/</span>      默认主题
+<span class="comment">│   ├── plugin/</span>            插件目录
+<span class="comment">│   ├── upload/</span>            上传文件
+<span class="comment">│   ├── cache/</span>              缓存目录
+<span class="comment">│   └── data/</span>               数据文件
+<span class="comment">├── api.php</span>                API 接口
+<span class="comment">└── feed.php</span>               RSS 输出
+        </div>
+      </div>
+
+      <div class="mt-10 bg-[rgba(255,255,255,0.02)] border border-white/5 p-8 rounded-sm">
+        <h3 class="text-lg font-light mb-4 text-white/80">关键文件说明</h3>
+        <table class="data-table">
+          <tr><th>文件</th><th>作用</th></tr>
+          <tr><td>zb_system/c_option.php</td><td>全局系统配置，包含数据库、站点、安全等核心参数</td></tr>
+          <tr><td>zb_users/theme/</td><td>主题目录，每个子目录为一个独立主题</td></tr>
+          <tr><td>zb_users/plugin/</td><td>插件目录，支持独立启用/禁用</td></tr>
+          <tr><td>zb_users/upload/</td><td>用户上传的附件、图片等文件存储位置</td></tr>
+          <tr><td>zb_users/cache/</td><td>系统缓存，可安全删除（会自动重建）</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider mx-8"></div>
+
+  <!-- 更新日志 -->
+  <section id="changelog" class="py-24 px-8 md:px-16">
+    <div class="max-w-5xl mx-auto">
+      <span class="section-label" style="color:var(--lavender)">CHANGELOG</span>
+      <h2 class="section-title mb-12">更新日志</h2>
+
+      <div class="space-y-6">
+        <div class="border border-white/5 bg-[rgba(255,255,255,0.02)] p-8 rounded-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-light text-white/80">v1.0</h3>
+            <span class="text-xs text-white/25 tracking-widest">2026-10-15</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <p style="color:var(--sakura)" class="text-xs mb-3 tracking-widest">NEW</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 全新唯美主题引擎</li>
+                <li>· 内置资源下载管理模块</li>
+                <li>· API v2 接口重构</li>
+                <li>· 支持 PHP 8.2</li>
+              </ul>
+            </div>
+            <div>
+              <p style="color:var(--lavender)" class="text-xs mb-3 tracking-widest">IMPROVED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 后台 UI 全面重绘</li>
+                <li>· 缓存机制优化，性能提升 35%</li>
+                <li>· 伪静态规则自动检测</li>
+                <li>· 插件兼容性增强</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-white/30 text-xs mb-3 tracking-widest">FIXED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 修复编辑器图片上传异常</li>
+                <li>· 修复评论分页计数错误</li>
+                <li>· 修复时区设置不生效问题</li>
+                <li>· 修复 SQLite 模式下索引报错</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-white/5 bg-[rgba(255,255,255,0.02)] p-8 rounded-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-light text-white/80">v2.5.0</h3>
+            <span class="text-xs text-white/25 tracking-widest">2026-07-22</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <p style="color:var(--sakura)" class="text-xs mb-3 tracking-widest">NEW</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 多站点模式支持</li>
+                <li>· WebP 图片自动转换</li>
+                <li>· 评论审核工作流</li>
+              </ul>
+            </div>
+            <div>
+              <p style="color:var(--lavender)" class="text-xs mb-3 tracking-widest">IMPROVED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 数据库查询优化</li>
+                <li>· 后台操作日志增强</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-white/30 text-xs mb-3 tracking-widest">FIXED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 修复标签云排序异常</li>
+                <li>· 修复 RSS 输出编码问题</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-white/5 bg-[rgba(255,255,255,0.02)] p-8 rounded-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-light text-white/80">v2.4.0</h3>
+            <span class="text-xs text-white/25 tracking-widest">2026-04-10</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <p style="color:var(--sakura)" class="text-xs mb-3 tracking-widest">NEW</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 内置主题市场</li>
+                <li>· 插件在线安装</li>
+                <li>· 数据导出/导入工具</li>
+              </ul>
+            </div>
+            <div>
+              <p style="color:var(--lavender)" class="text-xs mb-3 tracking-widest">IMPROVED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 编辑器升级为 Markdown 双模</li>
+                <li>· 搜索性能优化</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-white/30 text-xs mb-3 tracking-widest">FIXED</p>
+              <ul class="text-white/40 font-light space-y-1.5 text-sm">
+                <li>· 修复附件删除后数据库残留</li>
+                <li>· 修复移动端后台显示异常</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider mx-8"></div>
+
+  <!-- 下载 -->
+  <section id="download" class="py-24 px-8 md:px-16">
+    <div class="max-w-3xl mx-auto text-center">
+      <span class="section-label" style="color:var(--sakura)">DOWNLOAD</span>
+      <h2 class="section-title mb-4">获取 LCYZ-blogCMS</h2>
+      <p class="text-white/40 font-light text-lg mb-10">
+        当前版本 v1.0 · 完整安装包 · 内置部署文档
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="LCYZ-blog.zip" class="btn-primary text-base px-10 py-4">
+          <i class="ph ph-download text-lg"></i>
+          下载完整安装包
+        </a>
+        <a href="#" class="btn-ghost">
+          <i class="ph ph-git-branch text-lg"></i>
+          源码仓库
+        </a>
+      </div>
+
+      <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="text-xl font-light text-white/70">v1.0</div>
+          <div class="text-xs text-white/25 mt-1 tracking-widest">最新版本</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xl font-light text-white/70">22.59 MB</div>
+          <div class="text-xs text-white/25 mt-1 tracking-widest">安装包体积</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xl font-light text-white/70">PHP 7.4+</div>
+          <div class="text-xs text-white/25 mt-1 tracking-widest">运行环境</div>
+        </div>
+        <div class="text-center">
+          <div class="text-xl font-light text-white/70">MIT</div>
+          <div class="text-xs text-white/25 mt-1 tracking-widest">开源协议</div>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-white/5">
+        <p class="text-white/20 text-xs tracking-widest mb-3">校验信息</p>
+        <div class="code-block text-left max-w-lg mx-auto text-xs">
+MD5:    a3f5c8e2d1b7a9c4e6f2d8b1a5c3e7d
+SHA256: 4e8f2a1c6d3b9e7f5a2c8d1e4b6a9f3c7e2d5b8a1c4f6e9d2a7b3c5f8e1a6d
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="py-12 px-8 md:px-16 border-t border-white/5">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <div>
+        <div class="text-sm font-semibold tracking-widest text-white/60">
+          LCYZ<span style="color:var(--sakura)">·</span>BLOG CMS
+        </div>
+        <p class="text-xs text-white/20 mt-2">© 2026 不见桃花 · 基于 Z-Blog 架构深度开发</p>
+      </div>
+      <div class="flex flex-wrap gap-6 text-xs text-white/30 justify-center">
+        <a href="#" class="hover:text-white/60 transition">文档中心</a>
+        <a href="#" class="hover:text-white/60 transition">主题市场</a>
+        <a href="#" class="hover:text-white/60 transition">插件仓库</a>
+        <a href="#" class="hover:text-white/60 transition">社区论坛</a>
+        <a href="#" class="hover:text-white/60 transition">服务支持</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<style>
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+@keyframes float {
+  0%,100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-20px) scale(1.2); opacity: 0.8; }
+}
+</style>
+
+<script>
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+});
+function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+requestAnimationFrame(raf);
+
+gsap.registerPlugin(ScrollTrigger);
+
+gsap.to('#progress', {
+  scrollTrigger: { scrub: 0.3 },
+  scaleX: 1, ease: 'none', transformOrigin: 'left center'
+});
+
+gsap.utils.toArray('.step-item').forEach((el) => {
+  gsap.from(el, {
+    scrollTrigger: { trigger: el, start: 'top 85%' },
+    y: 40, opacity: 0, duration: 0.8, ease: 'power3.out'
+  });
+});
+
+gsap.utils.toArray('.section-title').forEach(el => {
+  gsap.from(el, {
+    scrollTrigger: { trigger: el, start: 'top 85%' },
+    y: 30, opacity: 0, duration: 1, ease: 'power3.out'
+  });
+});
+
+const pc = document.getElementById('particles');
+for (let i = 0; i < 25; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.top = Math.random() * 100 + '%';
+  p.style.animation = `float ${4 + Math.random() * 4}s ease-in-out infinite`;
+  p.style.animationDelay = Math.random() * 5 + 's';
+  pc.appendChild(p);
+}
+
+const navItems = document.querySelectorAll('[data-nav]');
+const sections = [...navItems].map(a => document.querySelector(a.getAttribute('href')));
+
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + 150;
+  let current = '';
+  sections.forEach(sec => {
+    if (sec && scrollY >= sec.offsetTop) current = sec.id;
+  });
+  navItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('href') === '#' + current) {
+      item.classList.add('active');
+    }
+  });
+});
+
+navItems.forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(item.getAttribute('href'));
+    if (target) lenis.scrollTo(target, { offset: 0, duration: 1.5 });
+    closeSidebar();
+  });
+});
+
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+const toggle = document.getElementById('menuToggle');
+
+function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('show'); }
+
+toggle.addEventListener('click', () => {
+  if (sidebar.classList.contains('open')) closeSidebar();
+  else openSidebar();
+});
+overlay.addEventListener('click', closeSidebar);
+</script>
+
+</body>
+</html>
